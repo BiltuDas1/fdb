@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# Old files
+*.old
+
+# Vs Code Settings
+.vscode
