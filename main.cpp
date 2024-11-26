@@ -18,9 +18,9 @@ int main() {
   rootNode.add(std::move(n2), "romanus");
   rootNode.add(std::move(n3), "romulus");
   rootNode.add(std::move(n4), "rubens");
-  // rootNode.add(std::move(n5), "ruber");
-  //  rootNode.add(std::move(n6), "rubicon");
-  //  rootNode.add(std::move(n7), "rubicundus");
+  rootNode.add(std::move(n5), "ruber");
+  rootNode.add(std::move(n6), "rubicon");
+  rootNode.add(std::move(n7), "rubicundus");
 
   cout << rootNode.totalChildNodes() << endl;
   for (const auto &n : *rootNode.getChildrens()) {

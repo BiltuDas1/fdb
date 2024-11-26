@@ -37,3 +37,4 @@
 # Vs Code Settings
 .vscode
 main
+build/

@@ -48,7 +48,7 @@ public:
 };
 
 std::string Tree::matchedPrefix(std::string str1, std::string str2) const {
-  uint i, smallerLength;
+  std::size_t i, smallerLength;
   std::string matchedPart;
 
   // Finding for smaller string length
@@ -76,13 +76,13 @@ void Tree::add(std::unique_ptr<Node> node, std::string text) {
   }
 
   // If at least one child node exist
-  // Check if any key's prefix matched with the text, if yes then create a new key with the matched prefix
-  // and then make a child node with the unmatched part of the string, and also move existing node as child
-  // node of the prefix matched node
-  //  for (auto it = this->childrens.begin(); it != this->childrens.end(); ++it) {
   for (auto &key : this->childrens) {
     std::string matched = matchedPrefix(key.first, text);
-    if (!matched.empty()) {
+
+    // Check if any key's prefix matched with the text, if yes then create a new key with the matched prefix
+    // and then make a child node with the unmatched part of the string, and also move existing node as child
+    // node of the prefix matched node
+    if (!matched.empty() && matched.compare(key.first) != 0) {
       auto newNode = std::make_unique<Node>();
       auto oldNode = std::move(key.second);
 
@@ -91,6 +91,32 @@ void Tree::add(std::unique_ptr<Node> node, std::string text) {
       newNode->add(std::move(oldNode), key.first.substr(matched.length()));
       this->childrens.erase(key.first);
       this->childrens[matched] = std::move(newNode); // Storing matched Prefix node
+      return;
+    }
+    // If the node total keyname is matched with the matched part,
+    // Then look for child node and check the matched substring
+    else if (matched.compare(key.first) == 0) {
+      std::string remainingText = text.substr(key.first.length());
+      std::string newKey = key.first;
+      Node *rootNode = key.second.get();
+      
+      // Getting lowest matched Node
+      while (matched.compare(newKey) == 0) {
+        for (auto &subkey : rootNode->childrens) {
+          matched = matchedPrefix(subkey.first, remainingText);
+          if (matched.compare(subkey.first) == 0) {
+            newKey = subkey.first;
+            rootNode = subkey.second.get();
+            remainingText = remainingText.substr(matched.length());
+            break;
+          } else {
+            matched = "";
+          }
+        }
+      }
+
+      // Storing the node under the common matched node
+      rootNode->add(std::move(node), remainingText);
       return;
     }
   }
