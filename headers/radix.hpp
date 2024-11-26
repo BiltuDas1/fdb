@@ -1,5 +1,7 @@
+#include <memory>
 #include <string>
 #include <map>
+#include <iostream>
 #include "../xxHash/xxhash.h"
 
 namespace Radix {
@@ -10,13 +12,20 @@ private:
   std::string matchedPrefix(std::string str1, std::string str2) const;
 
 protected:
+  std::map<std::string, std::unique_ptr<Node>> childrens;
+
 public:
-  std::map<std::string, Node *> childrens;
-  void add(Node *node, std::string text);
+  void add(std::unique_ptr<Node> node, std::string text);
   void remove(std::string text);
   Node *search(std::string text) const;
+  // Returns the reference of the children map
+  // This returns reference cause std::unique_ptr can't be copied
+  // Warning: don't try to modify the returned data
+  std::map<std::string, std::unique_ptr<Node>> *getChildrens() {
+    return &this->childrens;
+  }
   ulong totalChildNodes() const {
-    return childrens.size();
+    return this->childrens.size();
   }
 };
 
@@ -58,11 +67,11 @@ std::string Tree::matchedPrefix(std::string str1, std::string str2) const {
   return matchedPart;
 }
 
-void Tree::add(Node *node, std::string text) {
+void Tree::add(std::unique_ptr<Node> node, std::string text) {
   // If there's is no child node
   // Store the text directly as the node
-  if (this->childrens.size() == 0) {
-    childrens[text] = node;
+  if (this->childrens.empty()) {
+    this->childrens[text] = std::move(node);
     return;
   }
 
@@ -70,23 +79,23 @@ void Tree::add(Node *node, std::string text) {
   // Check if any key's prefix matched with the text, if yes then create a new key with the matched prefix
   // and then make a child node with the unmatched part of the string, and also move existing node as child
   // node of the prefix matched node
-  std::string matched;
-  for (const auto &key : childrens) {
-    matched = matchedPrefix(key.first, text);
-    if (matched.size() != 0) {
-      Node newNode;
-      childrens[matched] = &newNode; // Storing matched Prefix node
-      Node *oldNode = childrens[key.first];
+  //  for (auto it = this->childrens.begin(); it != this->childrens.end(); ++it) {
+  for (auto &key : this->childrens) {
+    std::string matched = matchedPrefix(key.first, text);
+    if (!matched.empty()) {
+      auto newNode = std::make_unique<Node>();
+      auto oldNode = std::move(key.second);
 
       // Getting remaining part of the string excluding the prefix
-      newNode.add(node, text.substr(matched.length()));
-      newNode.add(oldNode, key.first.substr(matched.length()));
-      childrens.erase(key.first);
+      newNode->add(std::move(node), text.substr(matched.length()));
+      newNode->add(std::move(oldNode), key.first.substr(matched.length()));
+      this->childrens.erase(key.first);
+      this->childrens[matched] = std::move(newNode); // Storing matched Prefix node
       return;
     }
   }
 
   // If at least one child node exist but no prefix matched then simply add the node
-  childrens[text] = node;
+  this->childrens[text] = std::move(node);
 }
 }
