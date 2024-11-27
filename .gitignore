@@ -38,3 +38,4 @@
 .vscode
 main
 build/
+.cache/

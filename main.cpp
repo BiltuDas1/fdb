@@ -14,6 +14,7 @@ int main() {
   unique_ptr<Node> n5 = make_unique<Node>(50);
   unique_ptr<Node> n6 = make_unique<Node>(60);
   unique_ptr<Node> n7 = make_unique<Node>(70);
+  cout << n1->isNull() << endl;
   rootNode.add(std::move(n1), "romane");
   rootNode.add(std::move(n2), "romanus");
   rootNode.add(std::move(n3), "romulus");
@@ -22,13 +23,11 @@ int main() {
   rootNode.add(std::move(n6), "rubicon");
   rootNode.add(std::move(n7), "rubicundus");
 
-  cout << rootNode.totalChildNodes() << endl;
-  for (const auto &n : *rootNode.getChildrens()) {
-    cout << "Node: " << n.first << ", Childrens: " << n.second->totalChildNodes() << endl;
-    for (const auto &p : *n.second->getChildrens()) {
-      cout << p.first << endl;
-    }
-    cout << endl;
+  Node *ptr = rootNode.search("rom");
+  if (ptr == nullptr) {
+    cout << "Not Found" << endl;
+  } else {
+    cout << "Found" << endl;
   }
   return 0;
 }
