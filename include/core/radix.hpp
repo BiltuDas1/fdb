@@ -116,7 +116,7 @@ void Tree::add(std::unique_ptr<Node> node, std::string text) {
       std::string remainingText = text.substr(key.first.length());
       std::string newKey = key.first;
       Node *rootNode = key.second.get();
-      
+
       // Getting lowest matched Node
       while (matched.compare(newKey) == 0) {
         for (auto &subkey : rootNode->childrens) {

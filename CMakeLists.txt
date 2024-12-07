@@ -9,8 +9,8 @@ add_library(xxh3 SHARED xxHash/xxhash.c)
 target_include_directories(xxh3 PUBLIC xxHash)
 
 add_executable(${PROJECT_NAME} main.cpp)
-target_link_libraries(${PROJECT_NAME} PRIVATE xxh3)
-target_include_directories(${PROJECT_NAME} PRIVATE headers)
+target_link_libraries(${PROJECT_NAME} PRIVATE xxh3 rocksdb uv)
+target_include_directories(${PROJECT_NAME} PRIVATE include)
 
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Werror -Wpedantic)
 set_target_properties(${PROJECT_NAME} PROPERTIES

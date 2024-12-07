@@ -1,33 +1,42 @@
 #include <iostream>
-#include <memory>
-#include "headers/radix.hpp"
+#include <cstdlib>
+#include <string>
+#include <uv.h>
+#include "include/network.hpp"
 
-using std::cout, std::endl, std::string, Radix::Node, Radix::Tree, std::unique_ptr, std::make_unique;
+using std::cout, std::cerr, std::endl, std::string;
 
 int main() {
-  // Testing creation of sample nodes
-  Tree rootNode;
-  unique_ptr<Node> n1 = make_unique<Node>(10);
-  unique_ptr<Node> n2 = make_unique<Node>(20);
-  unique_ptr<Node> n3 = make_unique<Node>(30);
-  unique_ptr<Node> n4 = make_unique<Node>(40);
-  unique_ptr<Node> n5 = make_unique<Node>(50);
-  unique_ptr<Node> n6 = make_unique<Node>(60);
-  unique_ptr<Node> n7 = make_unique<Node>(70);
-  cout << n1->isNull() << endl;
-  rootNode.add(std::move(n1), "romane");
-  rootNode.add(std::move(n2), "romanus");
-  rootNode.add(std::move(n3), "romulus");
-  rootNode.add(std::move(n4), "rubens");
-  rootNode.add(std::move(n5), "ruber");
-  rootNode.add(std::move(n6), "rubicon");
-  rootNode.add(std::move(n7), "rubicundus");
+  char *port = std::getenv("PORT");
 
-  Node *ptr = rootNode.search("rom");
-  if (ptr == nullptr) {
-    cout << "Not Found" << endl;
+  uv_loop_t *loop = uv_default_loop();
+  uv_tcp_t server;
+  uv_tcp_init(loop, &server); // Initialize the TCP Server
+
+  sockaddr_in addr;
+  // If port is NULL
+  if (port == nullptr) {
+    uv_ip4_addr("0.0.0.0", 11111, &addr);
   } else {
-    cout << "Found" << endl;
+    uv_ip4_addr("0.0.0.0", std::stoi(port), &addr); // Binding the port to the addr
   }
+
+  uv_tcp_bind(&server, (const sockaddr*)&addr, 0); // Bind server to the addr
+  int r = uv_listen((uv_stream_t *)&server, 128, Network::query);
+
+  if (r) {
+    cerr << "Listen error: " << uv_strerror(r) << endl;
+    return 1;
+  }
+
+  if (port == nullptr) {
+    cout << "Database is running on port 11111" << endl;
+  } else {
+    cout << "Database is running on port " << port << endl;
+  }
+
+  // Start the server along with Infinite loop
+  uv_run(loop, UV_RUN_DEFAULT);
+
   return 0;
 }

@@ -14,13 +14,28 @@ func Connect(ip string, port uint) {
 }
 
 // Read the value of the token from the database
-func Read(data []byte) (err error) {
+func Read(data []byte) (response []byte, err error) {
 	conn, err = net.Dial("tcp", addr)
+	if err != nil {
+		return
+	}
 
 	_, err = conn.Write(data)
-	return
+	if err != nil {
+		return
+	}
+
+	buffer := make([]byte, 100)
+	n, err := conn.Read(buffer)
+	if err != nil {
+		return
+	}
+
+	return buffer[:n], nil
 }
 
 func Close() {
-	defer conn.Close()
+	if conn != nil {
+		defer conn.Close()
+	}
 }
