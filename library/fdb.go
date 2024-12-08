@@ -5,22 +5,25 @@ import (
 	"strconv"
 )
 
-var addr string = "127.0.0.1:11111"
 var conn net.Conn
 
-// Connects to the database
-func Connect(ip string, port uint) {
-	addr = ip + ":" + strconv.Itoa(int(port))
+// Connects to the database server
+//
+// Returns error same as https://pkg.go.dev/net#Dial
+func Connect(ip string, port uint) (err error) {
+	addr := ip + ":" + strconv.Itoa(int(port))
+	conn, err = net.Dial("tcp", addr)
+	return
+}
+
+// Writes the data on the database
+func Write(url string, tokens []string, metadatas map[string]string) (err error) {
+	return
 }
 
 // Read the value of the token from the database
-func Read(data []byte) (response []byte, err error) {
-	conn, err = net.Dial("tcp", addr)
-	if err != nil {
-		return
-	}
-
-	_, err = conn.Write(data)
+func Read(token string) (response []byte, err error) {
+	_, err = conn.Write([]byte(token))
 	if err != nil {
 		return
 	}

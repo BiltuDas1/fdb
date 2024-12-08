@@ -4,13 +4,26 @@
 #include "process.hpp"
 
 namespace Parser {
-  // Read the client information and process it
-  // Returns results in byte array
-  // The first position character is the flag,
-  // 0 when there is no Data
-  // 6 when success
-  // 21 when failed
-  char *parse(const char *data, ssize_t size, size_t *resp_size) {
+  /**
+   * @brief Function which parse the data from the client and process it
+   * 
+   * This function Reads the client information (in bytes) and split the opcode and
+   * operand section from it. After reading the opcode the function decides what operation
+   * to perform and then call the respective operation function for execution.
+   * 
+   * The data is passed into this function is an array but the first element of the array (i.e at 0 position)
+   * always contains the opcode which tells what operation to perform. The operand section is optional but 
+   * the opcode section is mandatory to have. If invalid opcode encounter then the function returns [0].
+   * 
+   * @param *data Array of bytes received from the client (Contains opcode and operand)
+   * @param size The total size of the `data` array
+   * @param *resp_size Reference to a mutable variable which stores the size of the output returned by this function
+   * 
+   * @returns 
+   * If successful then it returns Dynamic Array of Chars (Contains bytes instead of valid ascii chars),
+   * Otherwise it returns [0] (In bytes)
+   **/
+  char *parse(const char *data, ssize_t size, size_t *resp_size) noexcept {
     char *resp = nullptr;
     *resp_size = 1;
 
