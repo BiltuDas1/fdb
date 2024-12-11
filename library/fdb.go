@@ -23,7 +23,9 @@ func Write(url string, tokens []string, metadatas map[string]string) (err error)
 
 // Read the value of the token from the database
 func Read(token string) (response []byte, err error) {
-	_, err = conn.Write([]byte(token))
+	byteobj := []byte{10}
+	byteobj = append(byteobj, []byte(token)...)
+	_, err = conn.Write(byteobj)
 	if err != nil {
 		return
 	}

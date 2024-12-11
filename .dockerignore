@@ -40,5 +40,9 @@ build/
 .cache/
 test*
 
-# Docker
-docker-compose.yml
+# Docker Objects
+Dockerfile
+.dockerignore
+
+# Git
+.git*
