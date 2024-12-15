@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <string>
 #include <uv.h>
-#include "include/network.hpp"
+#include "include/depends/network.hpp"
 
 using std::cout, std::cerr, std::endl, std::string;
 

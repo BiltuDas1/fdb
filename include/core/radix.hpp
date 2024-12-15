@@ -5,14 +5,16 @@
 #include <iostream>
 
 namespace Radix {
-class Node;
+  typedef uint64_t ulong;
+  class Node;
 
-// Stack to hold the node references which encounter
-// While using the search() method
-static std::stack<std::map<std::string, Node *>> stackOfNodes;
-static bool enableStack = false;
+  // Stack to hold the node references which encounter
+  // While using the search() method
+  static std::stack<std::map<std::string, Node *>> stackOfNodes;
+  static bool enableStack = false;
 
-class Tree {
+  class Tree
+  {
   private:
     std::string matchedPrefix(std::string str1, std::string str2) const;
 

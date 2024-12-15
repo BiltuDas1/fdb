@@ -2,11 +2,14 @@
 #include <iostream>
 #include <cstring>
 #include "parser.hpp"
+#include "../core/mempool.hpp"
 
 namespace Network {
+  auto pool = new Pool::MemoryPool(1024 * 1024);
+
   // Allocating Buffer
   void alloc_buff(uv_handle_s *handle, size_t suggested_size, uv_buf_t *buf) {
-    buf->base = new char[suggested_size];
+    buf->base = (char*)pool->allocate(suggested_size);
     buf->len = suggested_size;
   }
 
@@ -50,7 +53,7 @@ namespace Network {
       });
     }
 
-    delete buf->base;
+    pool->deallocate();
   }
 
   void query(uv_stream_t *server, int status) {
