@@ -16,8 +16,13 @@ namespace Process {
    * If successful returns 6 as the first element of the array, and rest is the response data,
    * If failed returns [21] (In bytes)
   **/ 
-  char *read(const char *operand, long size, size_t *resp_size) {
+  char *read(const char *operand, std::size_t size, std::size_t *resp_size) {
     // Read logic Comes here...
+
+    // The below Code is only for preventing Compilation Error
+    // It takes the input and return the same information as output
+    *resp_size = size;
+    return (char *)operand;
   }
 
   /**
@@ -35,7 +40,12 @@ namespace Process {
    * If successful returns [6] (In bytes),
    * If failed returns [21] (In bytes)
   **/ 
-  char *write(const char *operand, long size, size_t *resp_size) {
+  char *write(const char *operand, std::size_t size, std::size_t *resp_size) {
     // Write Logic Comes here...
+
+    // The below Code is only for preventing Compilation Error
+    // It takes the input and return the same information as output
+    *resp_size = size;
+    return (char *)operand;
   }
 }

@@ -55,8 +55,8 @@ namespace Pool {
 
       // Checks if memory can be allocated from freeMemory blocks
       if (!freeBlocks.empty() && fragmentation) {
-        int matched = 0;
-        int actualSize = size;
+        std::size_t matched = 0;
+        std::size_t actualSize = size;
         while (matched < freeBlocks.size())
         {
           auto iter = freeBlocks.find(size);
