@@ -4,31 +4,41 @@
 #include "parser.hpp"
 #include "../core/mempool.hpp"
 
+using std::cout, std::endl;
+
 namespace Network {
-  auto pool = new Pool::MemoryPool(1024 * 1024);
+
+  struct WorkerData {
+      uv_stream_t *client; // Client connection
+      char *message;       // Message to process
+      std::size_t message_len;  // Length of the message
+      char *response;      // Processed response
+      std::size_t response_len; // Length of the processed response
+  };
+
 
   // Allocating Buffer
   void alloc_buff(uv_handle_s *handle, size_t suggested_size, uv_buf_t *buf) {
-    buf->base = (char*)pool->allocate(suggested_size);
+    buf->base = new char[suggested_size];
     buf->len = suggested_size;
   }
 
   // Send response to the client
-  void send_resp(uv_stream_t *client, char *message, size_t message_len) {
+  void send_resp(uv_stream_t *client, char *message, std::size_t message_len) {
     auto *req = new uv_write_t();
     uv_buf_t buf = uv_buf_init(message, message_len);
+
+    // Attach the buffer to the write request for cleanup in the callback
+    req->data = message;
 
     // Perform the write operation
     uv_write(req, client, &buf, 1, [](uv_write_t *req, int status) {
         if (status < 0) {
             std::cerr << "Write error: " << uv_strerror(status) << std::endl;
         }
-        delete[] static_cast<char *>(req->data); // Free the message buffer
+        // delete[] static_cast<char *>(req->data); // Free the message buffer
         delete req;         // Free the write request
     });
-
-    // Attach the buffer to the write request for cleanup in the callback
-    req->data = message;
   }
 
   // Reading the data
@@ -38,9 +48,39 @@ namespace Network {
       // Parse the information and process it
       // And send response to the client
 
-      size_t resp_size;
-      char *resp = Parser::parse(buf->base, nread, &resp_size);
-      send_resp(client, resp, resp_size);
+      auto *data = new WorkerData;
+      data->client = client;
+      data->message = new char[nread];
+      data->message_len = nread;
+      std::memcpy(data->message, buf->base, nread);
+
+      // Queue
+      uv_work_t *work_req = new uv_work_t();
+      work_req->data = data;
+
+      uv_queue_work(uv_default_loop(), work_req, 
+        [](uv_work_s *req) {
+          // Worker Thread: Who do the main task
+          auto *data = static_cast<WorkerData *>(req->data);
+          data->response = Parser::parse(data->message, data->message_len, &data->response_len);
+        }, 
+        [](uv_work_s *req, int status){
+          // Main Thread: Starts Execution after Worker have done it's work
+          auto *data = static_cast<WorkerData *>(req->data);
+
+          if (status == 0) {
+            send_resp(data->client, data->response, data->response_len);
+          } else {
+            std::cerr << "Worker thread failed for message processing" << std::endl;
+          }
+
+          // Cleaning Up the memory
+          delete[] data->message;
+          delete[] data->response;
+          delete data;
+          delete req;
+        }
+      );
     }
     else if (nread < 0) {
       if (nread != UV_EOF) {
@@ -53,12 +93,14 @@ namespace Network {
       });
     }
 
-    pool->deallocate();
+    delete[] buf->base;
   }
+
 
   void query(uv_stream_t *server, int status) {
     // Connection Error
     if (status < 0) {
+      std::cerr << "Connection error: " << uv_strerror(status) << std::endl;
       return;
     }
 
