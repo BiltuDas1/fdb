@@ -1,7 +1,9 @@
 #include <iostream>
 #include <cstdlib>
 #include <stack>
+#include <vector>
 #include <mutex>
+#include <atomic>
 #include <unordered_map>
 
 namespace Pool {
@@ -134,5 +136,79 @@ namespace Pool {
     ~MemoryPool() {
       std::free(pool);
     }
+  };
+
+  template <typename T>
+  class FixedMemoryPool {
+    private:
+      std::size_t maxPool;
+      std::size_t eachBlockSize;
+      std::size_t totalAllocatedMemory = 0;
+      void **freeBlocks;
+      std::atomic<unsigned> nextFreeBlock = 0;
+      void *pool;
+      void *start_block;
+      void *top_block;
+
+    public:
+      FixedMemoryPool(std::size_t totalSize) {
+        this->maxPool = totalSize;
+        this->eachBlockSize = sizeof(T);
+
+        // If the whole block can't be stored into the totalSize, then throw error
+        if (totalSize % this->eachBlockSize != 0) {
+          throw std::bad_alloc();
+        }
+
+        pool = std::malloc(totalSize);
+        if (pool == nullptr)
+        {
+          throw std::bad_alloc();
+        }
+        start_block = pool;
+        top_block = (void *)((char *)pool + totalSize);
+
+        freeBlocks = new void *[totalSize / this->eachBlockSize];
+      }
+
+      /**
+       * @brief Allocates the memory
+       */
+      T *allocate(bool fragmentation = true) {
+        // If Already known element exist
+        if (nextFreeBlock.load() && fragmentation) {
+          nextFreeBlock.fetch_sub(1, std::memory_order_relaxed);
+          return (T*)freeBlocks[nextFreeBlock.load()];
+        }
+
+        // If new allocation
+        // If No Space Left
+        if (start_block == top_block) {
+          throw std::length_error("Pool Overflow");
+        }
+
+        T *temp = (T*)start_block;
+        start_block = static_cast<char*>(start_block) + eachBlockSize;
+        return temp;
+      }
+
+      /**
+       * @brief Deallocate the specific memory address
+       * @param ptr The Pointer Address to deallocate
+       */
+      void deallocate(void *ptr) {
+        if (this->pool <= ptr && ptr < this->top_block) {
+          freeBlocks[nextFreeBlock.load()] = ptr;
+          nextFreeBlock.fetch_add(1, std::memory_order_release);
+          return;
+        }
+
+        throw std::out_of_range("Reference is not the part of the pool");
+      }
+
+      ~FixedMemoryPool() {
+        std::free(pool);
+        delete []freeBlocks;
+      }
   };
 }
