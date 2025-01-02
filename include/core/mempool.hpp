@@ -173,6 +173,7 @@ namespace Pool {
 
       /**
        * @brief Allocates the memory
+       * @param fragmentation when set to true, it reuses memory block which is deallocated
        */
       T *allocate(bool fragmentation = true) {
         // If Already known element exist

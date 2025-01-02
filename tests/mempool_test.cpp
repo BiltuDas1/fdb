@@ -1,7 +1,7 @@
 #include "catch2/catch_amalgamated.hpp"
 #include "../include/core/mempool.hpp"
 
-TEST_CASE("FixedMemPool Allocation integers", "[allocation]") {
+TEST_CASE("FixedMemPool Allocation integers", "[fixedmempool]") {
   auto *pool = new Pool::FixedMemoryPool<int>(sizeof(int) * 3);
   int *a = pool->allocate();
   int *b = pool->allocate();
@@ -14,7 +14,7 @@ TEST_CASE("FixedMemPool Allocation integers", "[allocation]") {
   REQUIRE(*c == 30);
 }
 
-TEST_CASE("FixedMemPool Deallocation integers", "[deallocation]") {
+TEST_CASE("FixedMemPool Deallocation integers", "[fixedmempool]") {
   auto *pool = new Pool::FixedMemoryPool<int>(sizeof(int) * 3);
   int *a = pool->allocate();
   int *b = pool->allocate();
@@ -36,14 +36,14 @@ TEST_CASE("FixedMemPool Deallocation integers", "[deallocation]") {
   REQUIRE(*f == 300);
 }
 
-TEST_CASE("FixedMemPool Overflow") {
+TEST_CASE("FixedMemPool Overflow", "[fixedmempool]") {
   auto *pool = new Pool::FixedMemoryPool<int>(sizeof(int));
   int *a = pool->allocate();
   *a = 10;
   REQUIRE_THROWS_AS(pool->allocate(), std::length_error);
 }
 
-TEST_CASE("Check If memory reused") {
+TEST_CASE("Check If memory reused", "[fixedmempool]") {
   auto *pool = new Pool::FixedMemoryPool<int>(sizeof(int));
   int *a = pool->allocate();
   *a = 30;
@@ -53,4 +53,17 @@ TEST_CASE("Check If memory reused") {
   *b = 40;
   REQUIRE(*a == 40);
   REQUIRE(*a == *b);
+}
+
+TEST_CASE("Check if memory reuse can disable", "[fixedmempool]") {
+  auto *pool = new Pool::FixedMemoryPool<int>(sizeof(int) * 3);
+  int *a = pool->allocate();
+  *a = 4;
+  int *b = pool->allocate();
+  *b = 5;
+  pool->deallocate(a);
+  int *c = pool->allocate(false);
+  *c = 7;
+
+  REQUIRE(*a != *c);
 }
