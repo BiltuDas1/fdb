@@ -1,0 +1,39 @@
+#!/bin/sh
+
+cd tests
+
+# Clean
+if [[ "$1" == "clean" ]]; then
+  rm catch2.o
+  rm *.cpp.app
+  exit
+fi
+
+CPP=c++17
+TEST_FILES=()
+
+# If catch2 is not compiled
+if [[ ! -f "catch2.o" ]]; then
+  g++ -std=$CPP -c "catch2/catch_amalgamated.cpp" -o "catch2.o"
+fi
+
+# If cpp file passed as parameter
+if [[ "$1" == *".cpp" ]]; then
+  g++ -std=$CPP "../$1" "catch2.o" -o "a.out"
+  "./a.out"
+  rm "a.out"
+  exit
+fi
+
+# Compiling All the Test CPP files
+for i in $(ls *.cpp); do
+  g++ -std=$CPP "$i" "catch2.o" -o "$i.app"
+  TEST_FILES+=("$i.app")
+done
+
+# Running All the test cpp files
+for i in "${TEST_FILES[@]}"; do
+  echo
+  echo -e "\033[36m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\033[0m"
+  "./$i"
+done

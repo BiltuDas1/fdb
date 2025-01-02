@@ -38,7 +38,7 @@
 main
 build/
 .cache/
-test*
+test*.*
 
 # Docker
 docker-compose.yml
